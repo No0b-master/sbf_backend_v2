@@ -6,7 +6,7 @@ export default (sequelize) => {
     SBF_id: { type: DataTypes.STRING, allowNull: false, unique: true },
     name: { type: DataTypes.STRING, allowNull: false },
     dob: { type: DataTypes.STRING, allowNull: false },
-    blood_group: { type: DataTypes.STRING, allowNull: false },
+    blood_group: { type: DataTypes.STRING, allowNull: true },
     contact_no: { type: DataTypes.STRING },
     whatsapp_no: { type: DataTypes.STRING },
     email: { type: DataTypes.STRING },
