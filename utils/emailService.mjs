@@ -1,14 +1,14 @@
 import { createTransport } from 'nodemailer';
 
 export const transporter = createTransport({
-  port: 465,
+  port: 587,
   host: "smtp.gmail.com",
   service: 'gmail',
   auth: {
     user: 'volunteerssbf@gmail.com',
     pass: 'bdobyqibqnirtify',
   },
-  secure: true,
+  secure: false,
 });
 
 export async function sendEmail(to, subject, html) {
