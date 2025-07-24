@@ -60,13 +60,13 @@ export async function handleVolunteerSearch(req, res) {
   try {
     console.log(req.query);
     
-    const { query = '', year = '' } = req.query;
+    const { query = '', year = '' , page } = req.query;
 
     if (!year) {
       return res.status(400).json({ status: false, message: 'Year (session) is required' });
     }
 
-    const results = await searchVolunteersByQueryAndYear(query, year);
+    const results = await searchVolunteersByQueryAndYear(query, year, page);
 
     return res.status(200).json({
       status: true,
