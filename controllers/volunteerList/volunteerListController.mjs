@@ -7,7 +7,8 @@ const { VolunteerBasic } = db;
 
 export async function searchVolunteersByQueryAndYear(search = '', year = '', page = 1, limit = 10) {
   const searchQuery = `%${search}%`;
-  const offset = (page - 1) * limit;
+  const pg  = page == 0 ? 1 : parseInt(page) ;
+  const offset = (pg) * limit;
 
   // Main conditions for the search
   const searchConditions = {
@@ -49,7 +50,7 @@ export async function searchVolunteersByQueryAndYear(search = '', year = '', pag
 
   return {
     total: result.count,
-    page,
+    page : pg,
     totalPages: Math.ceil(result.count / limit),
     data: result.rows
   };
