@@ -4,45 +4,51 @@ import { Op } from 'sequelize';
 const { VolunteerBasic } = db;
 
 
-
 export async function searchVolunteersByQueryAndYear(search = '', year = '', page = 1, limit = 10) {
   const searchQuery = `%${search}%`;
-  const pg  = page == 0 ? 1 : parseInt(page) ;
-  const offset = (pg) * limit;
+  const pg = page <= 0 ? 1 : parseInt(page);
+  const offset = (pg - 1) * limit;
 
-  // Main conditions for the search
-  const searchConditions = {
-    [Op.or]: [
-      { SBF_id: { [Op.like]: searchQuery } },
-      { name: { [Op.like]: searchQuery } },
-      { dob: { [Op.like]: searchQuery } },
-      { blood_group: { [Op.like]: searchQuery } },
-      { contact_no: { [Op.like]: searchQuery } },
-      { whatsapp_no: { [Op.like]: searchQuery } },
-      { email: { [Op.like]: searchQuery } },
-      { block: { [Op.like]: searchQuery } },
-      { state: { [Op.like]: searchQuery } },
-      { district: { [Op.like]: searchQuery } },
-      { pin_code: { [Op.like]: searchQuery } },
-      { valid_upto: { [Op.like]: searchQuery } }
-    ]
-  };
+  const conditions = [];
 
-  // Final condition: match year OR session is null
-  const conditions = {
-    [Op.and]: [
-      {
-        [Op.or]: [
-          { session: { [Op.like]: `%${year}%` } },
-          { session: null }
-        ]
-      },
-      searchConditions
-    ]
-  };
+  // Handle year/session filter
+  if (year) {
+    // Create both formats
+    const shortFormat = year.replace(/(\d{4})-(\d{4})/, (_, start, end) => `${start}-${end.slice(2)}`);
+    const longFormat = year.replace(/(\d{4})-(\d{2})/, (_, start, end) => `${start}-20${end}`);
+
+    conditions.push({
+      [Op.or]: [
+        { session: { [Op.like]: `%${year}%` } },
+        { session: { [Op.like]: `%${shortFormat}%` } },
+        { session: { [Op.like]: `%${longFormat}%` } },
+        { session: { [Op.is]: null } }
+      ]
+    });
+  }
+
+  // Search filter
+  if (search) {
+    conditions.push({
+      [Op.or]: [
+        { SBF_id: { [Op.like]: searchQuery } },
+        { name: { [Op.like]: searchQuery } },
+        { dob: { [Op.like]: searchQuery } },
+        { blood_group: { [Op.like]: searchQuery } },
+        { contact_no: { [Op.like]: searchQuery } },
+        { whatsapp_no: { [Op.like]: searchQuery } },
+        { email: { [Op.like]: searchQuery } },
+        { block: { [Op.like]: searchQuery } },
+        { state: { [Op.like]: searchQuery } },
+        { district: { [Op.like]: searchQuery } },
+        { pin_code: { [Op.like]: searchQuery } },
+        { valid_upto: { [Op.like]: searchQuery } }
+      ]
+    });
+  }
 
   const result = await VolunteerBasic.findAndCountAll({
-    where: conditions,
+    where: conditions.length > 0 ? { [Op.and]: conditions } : {},
     offset,
     limit,
     order: [['id', 'DESC']]
@@ -50,7 +56,7 @@ export async function searchVolunteersByQueryAndYear(search = '', year = '', pag
 
   return {
     total: result.count,
-    page : pg,
+    page: pg,
     totalPages: Math.ceil(result.count / limit),
     data: result.rows
   };
@@ -58,9 +64,7 @@ export async function searchVolunteersByQueryAndYear(search = '', year = '', pag
 
 
 export async function handleVolunteerSearch(req, res) {
-  try {
-    console.log(req.query);
-    
+  try {    
     const { query = '', year = '' , page } = req.query;
 
     if (!year) {
