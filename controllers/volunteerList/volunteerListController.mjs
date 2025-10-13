@@ -5,15 +5,14 @@ const { VolunteerBasic } = db;
 
 
 export async function searchVolunteersByQueryAndYear(search = '', year = '', page = 1, limit = 10) {
-  const searchQuery = `%${search}%`;
-  const pg = page <= 0 ? 1 : parseInt(page);
-  const offset = (pg - 1) * limit;
+  // Ensure numeric
+  const pg = page <= 0 ? 1 : parseInt(page, 10);
+  const parsedLimit = parseInt(limit, 10) || 10;   // default fallback
+  const offset = (pg - 1) * parsedLimit;
 
   const conditions = [];
 
-  // Handle year/session filter
   if (year) {
-    // Create both formats
     const shortFormat = year.replace(/(\d{4})-(\d{4})/, (_, start, end) => `${start}-${end.slice(2)}`);
     const longFormat = year.replace(/(\d{4})-(\d{2})/, (_, start, end) => `${start}-20${end}`);
 
@@ -27,8 +26,8 @@ export async function searchVolunteersByQueryAndYear(search = '', year = '', pag
     });
   }
 
-  // Search filter
   if (search) {
+    const searchQuery = `%${search}%`;
     conditions.push({
       [Op.or]: [
         { SBF_id: { [Op.like]: searchQuery } },
@@ -50,11 +49,11 @@ export async function searchVolunteersByQueryAndYear(search = '', year = '', pag
   const result = await VolunteerBasic.findAndCountAll({
     where: conditions.length > 0 ? { [Op.and]: conditions } : {},
     offset,
-    limit,
+    limit: parsedLimit,
     order: [['id', 'DESC']]
   });
 
-  return {
+ return  {
     total: result.count,
     page: pg,
     totalPages: Math.ceil(result.count / limit),
@@ -63,20 +62,23 @@ export async function searchVolunteersByQueryAndYear(search = '', year = '', pag
 }
 
 
+
 export async function handleVolunteerSearch(req, res) {
   try {    
-    const { query = '', year = '' , page } = req.query;
+    const { query = '', year = '' , page , limit = 10} = req.query;
+    console.log(req.query);
+    
+
 
     if (!year) {
       return res.status(400).json({ status: false, message: 'Year (session) is required' });
     }
 
-    const results = await searchVolunteersByQueryAndYear(query, year, page);
+    const results = await searchVolunteersByQueryAndYear(query, year, page, limit);
 
     return res.status(200).json({
-      status: true,
-      count: results.length,
-      data: results
+      status : true ,
+       ...results
     });
   } catch (err) {
     console.error('Volunteer search failed:', err);
