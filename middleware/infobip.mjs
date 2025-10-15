@@ -2,14 +2,6 @@ import https from "https";
 
 const INFOBIP_API_KEY = "be826a86a17f791be3f42eda9584ffce-0a64fe4d-2db8-40d2-9df9-cd662394bbdb";
 
-/**
- * Helper for InfoBip 2FA SMS
- * Steps:
- * 1. Create application
- * 2. Create message template
- * 3. Send PIN
- * 4. Verify PIN
- */
 export class Infobip2FA {
   static baseOptions(path, method = "POST") {
     return {
