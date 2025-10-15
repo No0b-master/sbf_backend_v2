@@ -3,10 +3,10 @@ const VolunteerStatus = db.VolunteerStatus;
 const VolunteerBasic = db.VolunteerBasic;
 import { approvalEmail } from "../../utils/emailTemplates/approvalEmail.mjs";
 import { sendEmail } from "../../utils/emailService.mjs";
-import {getFinancialSession} from '../../utils/dates/getSession.mjs'
-import {validUtp} from '../../utils/dates/getValidUpto.mjs'
-import {getIsActive} from "../../utils/dates/getIsActive.mjs";
- export async function approveLocal(req, res) {
+import { getFinancialSession } from "../../utils/dates/getSession.mjs";
+import { validUtp } from "../../utils/dates/getValidUpto.mjs";
+import { getIsActive } from "../../utils/dates/getIsActive.mjs";
+export async function approveLocal(req, res) {
   const { SBF_id } = req.body;
 
   try {
@@ -63,7 +63,7 @@ export async function approveState(req, res) {
       await status.save();
     }
 
-     const user = await VolunteerBasic.findOne({ where: { SBF_id } });
+    const user = await VolunteerBasic.findOne({ where: { SBF_id } });
     if (user && user.email) {
       const { subject, html } = approvalEmail(user.name, "state");
       await sendEmail(user.email, subject, html);
@@ -100,15 +100,12 @@ export async function approveNational(req, res) {
       await status.save();
     }
 
-     const user = await VolunteerBasic.findOne({ where: { SBF_id } });
+    const user = await VolunteerBasic.findOne({ where: { SBF_id } });
 
-     user.session = getFinancialSession()
-     user.valid_upto = validUtp(getFinancialSession())
-     user.isActive = getIsActive(validUtp(getFinancialSession()))     
-     user.save();
-
-
-
+    user.session = getFinancialSession();
+    user.valid_upto = validUtp(getFinancialSession());
+    user.isActive = getIsActive(validUtp(getFinancialSession()));
+    user.save();
 
     if (user && user.email) {
       const { subject, html } = approvalEmail(user.name, "national");
@@ -141,7 +138,7 @@ export async function getApprovals(req, res) {
     if (!status) {
       return res.status(200).json({
         status: false,
-        data : {},
+        data: {},
         message: "No approval data found for this SBF ID",
       });
     }

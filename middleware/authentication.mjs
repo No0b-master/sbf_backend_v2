@@ -1,11 +1,12 @@
-import jwt from 'jsonwebtoken';
+import jwt from "jsonwebtoken";
 
 export function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader?.split(' ')[1]; // Bearer <token>
-
+  const authHeader = req.headers["authorization"];
+  const token = authHeader?.split(" ")[1]; // Bearer <token>
   if (!token) {
-    return res.status(401).json({ status: false, message: 'Access denied. No token provided.' });
+    return res
+      .status(401)
+      .json({ status: false, message: "Access denied. No token provided." });
   }
 
   try {
@@ -13,6 +14,6 @@ export function authenticateToken(req, res, next) {
     req.user = decoded; // user info available in routes/controllers
     next();
   } catch (err) {
-    return res.status(403).json({ status: false, message: 'Invalid token.' });
+    return res.status(403).json({ status: false, message: "Invalid token." });
   }
 }

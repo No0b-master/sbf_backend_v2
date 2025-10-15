@@ -16,7 +16,6 @@ router.get("/connection", (req, res) => {
 // Route Mounting
 router.use("/auth", authRoutes);
 router.use("/otp", otpRoutes);
-
 router.use("/volunteer", volunteerRoutes);
 router.use("/document", documentRoutes);
 router.use("/approval", approvalRoutes);
