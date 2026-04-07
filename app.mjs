@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // API Routes
-app.use('/api', routes);
+app.use('/api/v1', routes);
 
 // 404 Handler
 app.use((req, res) => {

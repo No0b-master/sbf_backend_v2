@@ -14,15 +14,37 @@ const User = db.User;
 
 export async function registerUser(req, res) {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, phone, password } = req.body;
 
-    if (!name || !email || !password) {
-      return res.status(400).json({ status: false, message: 'All fields are required' });
+    if (!name || !password) {
+      return res.status(400).json({ status: false, message: 'Name and password are required' });
     }
 
-    const existingUser = await User.findOne({ where: { email } });
-    if (existingUser) {
-      return res.status(200).json({ status: false, message: 'Email already exists' });
+    if (!email && !phone) {
+      return res.status(400).json({ status: false, message: 'Email or phone is required' });
+    }
+
+    // Check for existing user by email or phone
+    const existingEmail = email ? await User.findOne({ where: { email } }) : null;
+    const existingPhone = phone ? await User.findOne({ where: { phone } }) : null;
+
+    if (existingEmail || existingPhone) {
+      return res.status(200).json({ status: false, message: 'User already exists' });
+    }
+
+    // Check if provided fields are verified
+    let verified = true;
+    if (email) {
+      const emailVer = await db.EmailVerifications.findOne({ where: { email, verified: true } });
+      if (!emailVer) verified = false;
+    }
+    if (phone) {
+      const phoneVer = await db.PhoneVerifications.findOne({ where: { phone, verified: true } });
+      if (!phoneVer) verified = false;
+    }
+
+    if (!verified) {
+      return res.status(400).json({ status: false, message: 'Email/Phone not verified' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -30,20 +52,23 @@ export async function registerUser(req, res) {
 
     const newUser = await User.create({
       name,
-      email,
+      email: email || null,
+      phone: phone || null,
       password: hashedPassword,
       SBF_id
     });
 
-    // Trigger email in background (non-blocking)
-    (async () => {
-      try {
-        const { subject, html } = registrationEmail(name);
-        await sendEmail(email, subject, html);
-      } catch (err) {
-        console.error(`Failed to send welcome email to ${email}:`, err.message);
-      }
-    })();
+    // Trigger email in background (non-blocking) if email provided
+    if (email) {
+      (async () => {
+        try {
+          const { subject, html } = registrationEmail(name);
+          await sendEmail(email, subject, html);
+        } catch (err) {
+          console.error(`Failed to send welcome email to ${email}:`, err.message);
+        }
+      })();
+    }
 
     // Respond immediately
     return res.status(201).json({
@@ -53,6 +78,7 @@ export async function registerUser(req, res) {
         id: newUser.id,
         name: newUser.name,
         email: newUser.email,
+        phone: newUser.phone,
         SBF_id: newUser.SBF_id
       }
     });
@@ -66,13 +92,27 @@ export async function registerUser(req, res) {
 
 export async function loginUser(req, res) {
   try {
-    const { email, password } = req.body;
+    const { email, phone, password } = req.body;
 
-    if (!email || !password) {
-      return res.status(400).json({ status: false, message: 'Email and password are required' });
+    if (!password) {
+      return res.status(400).json({ status: false, message: 'Password is required' });
     }
 
-    const user = await User.findOne({ where: { email } });
+    if (!email && !phone) {
+      return res.status(400).json({ status: false, message: 'Email or phone is required' });
+    }
+
+    if (email && phone) {
+      return res.status(400).json({ status: false, message: 'Provide either email or phone, not both' });
+    }
+
+    let user;
+    if (email) {
+      user = await User.findOne({ where: { email } });
+    } else if (phone) {
+      user = await User.findOne({ where: { phone } });
+    }
+
     if (!user) {
       return res.status(404).json({ status: false, message: 'User not found' });
     }
@@ -86,6 +126,7 @@ export async function loginUser(req, res) {
       {
         id: user.id,
         email: user.email,
+        phone: user.phone,
         userType: user.userType,
         SBF_id: user.SBF_id
       },
@@ -100,6 +141,7 @@ export async function loginUser(req, res) {
         id: user.id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         SBF_id: user.SBF_id,
         userType: user.userType,
         state: user.state

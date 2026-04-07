@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { Sequelize, DataTypes } from 'sequelize';
-import { fileURLToPath } from 'url';
+import { fileURLToPath, pathToFileURL } from 'url';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -28,7 +28,7 @@ const files = fs.readdirSync(__dirname).filter(file =>
 );
 
 for (const file of files) {
-  const { default: defineModel } = await import(path.join(__dirname, file));
+  const { default: defineModel } = await import(pathToFileURL(path.join(__dirname, file)).href);
   const model = defineModel(sequelize, DataTypes);
   db[model.name] = model;
 }

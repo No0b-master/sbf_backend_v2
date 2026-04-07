@@ -22,7 +22,7 @@ export async function getVolunteerData(req, res) {
     if (!basic && !preferences && !documents) {
       return res.status(200).json({
         status: false,
-        data : [],
+        data : {},
         message: 'No volunteer data found for given SBF ID'
       });
     }
