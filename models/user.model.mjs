@@ -9,9 +9,11 @@ export default (sequelize) => {
       name: { type: DataTypes.STRING, allowNull: false },
       email: { type: DataTypes.STRING, allowNull: true, unique: true },
       phone: { type: DataTypes.STRING, allowNull: true, unique: true },
-      password: { type: DataTypes.STRING, allowNull: false },
+      password: { type: DataTypes.STRING, allowNull: true },
       state: { type: DataTypes.STRING },
       userType: { type: DataTypes.INTEGER, defaultValue: 4 },
+      authMethod: { type: DataTypes.ENUM('normal', 'google'), defaultValue: 'normal' },
+      dob: { type: DataTypes.STRING, allowNull: true },
     },
     {
       tableName: "users",
